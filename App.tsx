@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import FlashSale from './pages/FlashSale';
@@ -36,6 +36,7 @@ import AdminOrders from './pages/admin/OrderManagement';
 import AdminProducts from './pages/admin/ProductManagement';
 import AdminMembers from './pages/admin/MemberManagement';
 import AdminCoupons from './pages/admin/CouponManagement';
+import AdminSettings from './pages/admin/SystemSettings';
 
 const App: React.FC = () => {
   return (
@@ -55,13 +56,14 @@ const App: React.FC = () => {
           
           {/* Settings */}
           <Route path="/settings" element={<Settings />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/members" element={<AdminMembers />} />
           <Route path="/admin/coupons" element={<AdminCoupons />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/settings/personal-info" element={<PersonalInfo />} />
           <Route path="/settings/security" element={<AccountSecurity />} />
           <Route path="/settings/change-password" element={<ChangePassword />} />
