@@ -14,16 +14,21 @@ export async function callEdgeFunction(
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'apikey': supabaseAnonKey,
-    // 始终发送 Authorization header，没有 token 时使用 anon key
-    'Authorization': `Bearer ${token || supabaseAnonKey}`
+    // 始终使用 anon key 用于 Supabase 的 JWT 验证
+    'Authorization': `Bearer ${supabaseAnonKey}`
   }
+
+  // 将自定义 token 放在请求体中，而不是 Authorization header
+  const bodyPayload = token
+    ? { ...payload, _customToken: token }
+    : payload
 
   const response = await fetch(
     `${supabaseUrl}/functions/v1/${functionName}`,
     {
       method: 'POST',
       headers,
-      body: JSON.stringify(payload),
+      body: JSON.stringify(bodyPayload),
     }
   )
 
