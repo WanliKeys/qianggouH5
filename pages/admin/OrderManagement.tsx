@@ -74,6 +74,7 @@ const OrderManagement: React.FC = () => {
       });
       setNotice(res.message);
       setSplitForm({ orderId: '', parts: '2' });
+      fetchOrders();
     } catch (err: any) {
       setError(err.message || '拆单失败');
     }
@@ -86,6 +87,7 @@ const OrderManagement: React.FC = () => {
       const res = await api.adminAssignOrder(assignForm);
       setNotice(res.message);
       setAssignForm({ orderId: '', assignee: '' });
+      fetchOrders();
     } catch (err: any) {
       setError(err.message || '配单失败');
     }
@@ -98,6 +100,7 @@ const OrderManagement: React.FC = () => {
       const res = await api.adminAddOrder(addForm);
       setNotice(res.message);
       setAddForm({ userId: '', productId: '', note: '' });
+      fetchOrders();
     } catch (err: any) {
       setError(err.message || '加单失败');
     }

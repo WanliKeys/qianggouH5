@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
+import { Clock } from 'lucide-react';
 import { api } from '../api';
 import type { ApiFlashSale, ApiProduct } from '../types';
 
@@ -9,6 +10,7 @@ const FlashSale: React.FC = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<ApiFlashSale | null>(null);
   const [error, setError] = useState('');
+  const [countdown, setCountdown] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -29,6 +31,54 @@ const FlashSale: React.FC = () => {
     };
   }, []);
 
+  // 倒计时逻辑
+  useEffect(() => {
+    if (!data) return;
+
+    const calculateCountdown = () => {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+
+      let targetTime: Date | null = null;
+
+      if (data.status === 'before_listing') {
+        // 距离上架时间的倒计时
+        targetTime = new Date(`${today}T${data.listingAt}`);
+      } else if (data.status === 'listing') {
+        // 距离抢购时间的倒计时
+        targetTime = new Date(`${today}T${data.openAt}`);
+      }
+
+      if (!targetTime) {
+        setCountdown('');
+        return;
+      }
+
+      // 如果目标时间已过,尝试加一天
+      if (targetTime < now) {
+        targetTime.setDate(targetTime.getDate() + 1);
+      }
+
+      const diff = targetTime.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setCountdown('00:00:00');
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setCountdown(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+    };
+
+    calculateCountdown();
+    const countdownTimer = setInterval(calculateCountdown, 1000);
+
+    return () => clearInterval(countdownTimer);
+  }, [data]);
+
   const statusText = useMemo(() => {
     if (!data) return '抢单信息加载中';
     if (data.status === 'before_listing') return `商品将于 ${data.listingAt} 上架`;
@@ -43,9 +93,27 @@ const FlashSale: React.FC = () => {
   return (
     <div className="bg-gray-100 min-h-full pb-4">
       <Header title="限时抢购" showBack={false} />
-      <div className="px-4 pt-3 text-sm text-gray-600">
-        {statusText}
+
+      {/* 状态和倒计时区域 */}
+      <div className="mx-4 mt-3 bg-gradient-to-r from-green-700 to-green-600 rounded-lg p-4 shadow-md text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock size={20} />
+            <span className="text-sm font-medium">{statusText}</span>
+          </div>
+          {countdown && (
+            <div className="bg-white/20 backdrop-blur-sm rounded px-3 py-1.5">
+              <span className="font-mono text-lg font-bold tracking-wider">{countdown}</span>
+            </div>
+          )}
+        </div>
+        {data?.status === 'flash_sale' && (
+          <div className="mt-2 text-xs opacity-90">
+            🔥 抢购进行中，手慢无!
+          </div>
+        )}
       </div>
+
       {error && (
         <div className="mx-4 mt-3 bg-white rounded-lg p-3 text-sm text-red-500 shadow-sm">
           {error}

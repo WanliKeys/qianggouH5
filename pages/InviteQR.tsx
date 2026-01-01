@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import { api } from '../api';
 import type { ApiProfile } from '../types';
 
@@ -11,6 +12,11 @@ const InviteQR: React.FC = () => {
   useEffect(() => {
     api.fetchProfile().then(setProfile).catch(() => setProfile(null));
   }, []);
+
+  // 生成注册链接,包含邀请码
+  const inviteUrl = profile?.user.inviteCode
+    ? `${window.location.origin}/#/register?inviteCode=${profile.user.inviteCode}`
+    : '';
 
   const avatar = 'https://picsum.photos/id/64/200/200';
   return (
@@ -32,17 +38,22 @@ const InviteQR: React.FC = () => {
 
       {/* QR Card */}
       <div className="bg-white p-6 rounded-lg shadow-2xl relative z-10 w-72 flex flex-col items-center">
-          <div className="w-48 h-48 bg-gray-900 p-2 mb-4">
-              {/* Simulate QR Code */}
-              <div className="w-full h-full bg-white flex flex-wrap content-start">
-                   {/* Just a grid to look like QR */}
-                   {Array.from({length: 100}).map((_, i) => (
-                       <div key={i} className={`w-[10%] h-[10%] ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`} />
-                   ))}
-              </div>
+          <div className="w-48 h-48 bg-white p-2 mb-4 flex items-center justify-center">
+              {inviteUrl ? (
+                <QRCodeSVG
+                  value={inviteUrl}
+                  size={176}
+                  level="H"
+                  includeMargin={false}
+                />
+              ) : (
+                <div className="text-gray-400 text-sm text-center">
+                  加载中...
+                </div>
+              )}
           </div>
-          <div className="text-gray-800 font-bold mb-6">{profile?.user.inviteCode || '--'}</div>
-          <div className="text-gray-400 text-xs">扫一扫上方二维码加入我们吧</div>
+          <div className="text-gray-800 font-bold mb-2">邀请码: {profile?.user.inviteCode || '--'}</div>
+          <div className="text-gray-400 text-xs text-center">扫一扫上方二维码加入我们吧</div>
       </div>
     </div>
   );

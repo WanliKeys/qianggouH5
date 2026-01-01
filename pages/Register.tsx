@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { api } from '../api';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     phone: '',
     code: '',
@@ -15,6 +16,14 @@ const Register: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // 从URL参数中获取邀请码并自动填充
+  useEffect(() => {
+    const inviteCodeFromUrl = searchParams.get('inviteCode');
+    if (inviteCodeFromUrl) {
+      setFormData(prev => ({ ...prev, inviteCode: inviteCodeFromUrl }));
+    }
+  }, [searchParams]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
