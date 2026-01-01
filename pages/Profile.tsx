@@ -13,12 +13,26 @@ import type { ApiProfile } from '../types';
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ApiProfile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setLoading(false);
+      setError('未登录');
+      return;
+    }
+
     api.fetchProfile()
-      .then((data) => setProfile(data))
-      .catch((err) => setError(err.message || '请先登录'));
+      .then((data) => {
+        setProfile(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message || '请先登录');
+        setLoading(false);
+      });
   }, []);
 
   const handleLogout = () => {
@@ -26,19 +40,30 @@ const Profile: React.FC = () => {
       setProfile(null);
   };
 
-  if (!profile) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700 mx-auto"></div>
+          <p className="mt-4 text-gray-600">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile || error) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center pt-20 relative">
         {/* Removed back button in empty state for Profile page as it is a main tab */}
-        <EmptyState 
-            type="order" 
-            message="您尚未登录，请先点击登录" 
+        <EmptyState
+            type="order"
+            message="您尚未登录，请先点击登录"
         />
-        <button 
+        <button
             onClick={() => navigate('/login')}
             className="w-48 py-2 border border-gray-300 bg-white rounded shadow-sm text-gray-700 mt-4"
         >
-            {error ? '去登录' : '加载中'}
+            去登录
         </button>
       </div>
     );
