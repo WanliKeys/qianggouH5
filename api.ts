@@ -31,7 +31,7 @@ export const api = {
   // User endpoints
   fetchProfile: async () => {
     const token = getToken();
-    const data = await callEdgeFunction('auth', { action: 'get-profile' }, token);
+    const data = await callEdgeFunction('auth', { action: 'get-profile', userId: token });
     return data as ApiProfile;
   },
 
