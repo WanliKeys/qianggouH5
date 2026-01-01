@@ -13,11 +13,9 @@ export async function callEdgeFunction(
 ) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'apikey': supabaseAnonKey,  // 添加 Supabase API Key
-  }
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
+    'apikey': supabaseAnonKey,
+    // 始终发送 Authorization header，没有 token 时使用 anon key
+    'Authorization': `Bearer ${token || supabaseAnonKey}`
   }
 
   const response = await fetch(
