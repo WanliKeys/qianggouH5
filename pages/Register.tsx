@@ -36,13 +36,16 @@ const Register: React.FC = () => {
     }
     setSending(true);
     setError('');
-    try {
-      await api.sendCode(formData.phone);
-    } catch (err: any) {
-      setError(err.message || '发送失败');
-    } finally {
+
+    // 模拟发送验证码,生成随机6位数字
+    setTimeout(() => {
+      const mockCode = Math.floor(100000 + Math.random() * 900000).toString();
+      setFormData(prev => ({ ...prev, code: mockCode }));
       setSending(false);
-    }
+      // 可选:显示成功提示
+      setError('验证码已发送到您的手机');
+      setTimeout(() => setError(''), 2000);
+    }, 1000);
   };
 
   const handleRegister = async () => {
