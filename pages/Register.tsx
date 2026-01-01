@@ -103,9 +103,9 @@ const Register: React.FC = () => {
 
            {/* Verification Code */}
            <div className="flex items-center py-4 border-b border-green-800/30">
-               <span className="text-gray-600 text-base w-16">验证码</span>
-               <input 
-                 type="text" 
+               <span className="text-gray-600 text-base w-20 whitespace-nowrap">验证码</span>
+               <input
+                 type="text"
                  value={formData.code}
                  onChange={(e) => handleChange('code', e.target.value)}
                  className="flex-1 outline-none text-lg bg-transparent"
@@ -113,7 +113,7 @@ const Register: React.FC = () => {
                <button
                  onClick={handleSendCode}
                  disabled={sending}
-                 className={`text-xs px-4 py-2 rounded shadow-sm whitespace-nowrap ${sending ? 'bg-gray-300 text-gray-600' : 'bg-[#2d5d39] text-white'}`}
+                 className={`text-xs px-4 py-2 rounded shadow-sm whitespace-nowrap ml-2 ${sending ? 'bg-gray-300 text-gray-600' : 'bg-[#2d5d39] text-white'}`}
                >
                    {sending ? '发送中' : '获取验证码'}
                </button>
