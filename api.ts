@@ -16,6 +16,26 @@ export const api = {
     const data = await callEdgeFunction('auth', { action: 'register', ...payload });
     if (data.token) {
       setToken(data.token);
+      // 缓存用户基本信息
+      if (data.user) {
+        localStorage.setItem('userProfile', JSON.stringify({
+          user: {
+            id: data.user.id,
+            phone: data.user.phone,
+            nickname: data.user.nickname,
+            inviteCode: data.user.invite_code,
+            isMainAccount: data.user.is_main_account,
+            agreementSignedAt: data.user.agreement_signed_at,
+          },
+          stats: {
+            todayOrders: 0,
+            remainingQuota: 3,
+            couponsBalance: 0,
+            referralCount: 0,
+            couponCashThreshold: 100,
+          }
+        }));
+      }
     }
     return data as ApiLoginResponse;
   },
@@ -24,6 +44,26 @@ export const api = {
     const data = await callEdgeFunction('auth', { action: 'login', ...payload });
     if (data.token) {
       setToken(data.token);
+      // 缓存用户基本信息
+      if (data.user) {
+        localStorage.setItem('userProfile', JSON.stringify({
+          user: {
+            id: data.user.id,
+            phone: data.user.phone,
+            nickname: data.user.nickname,
+            inviteCode: data.user.invite_code,
+            isMainAccount: data.user.is_main_account,
+            agreementSignedAt: data.user.agreement_signed_at,
+          },
+          stats: {
+            todayOrders: 0,
+            remainingQuota: 3,
+            couponsBalance: 0,
+            referralCount: 0,
+            couponCashThreshold: 100,
+          }
+        }));
+      }
     }
     return data as ApiLoginResponse;
   },

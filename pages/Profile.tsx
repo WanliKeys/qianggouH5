@@ -12,44 +12,47 @@ import type { ApiProfile } from '../types';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<ApiProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<ApiProfile | null>(() => {
+    // 尝试从 localStorage 读取缓存的用户数据
+    const token = localStorage.getItem('authToken');
+    const cachedProfile = localStorage.getItem('userProfile');
+    if (token && cachedProfile) {
+      try {
+        return JSON.parse(cachedProfile);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
   const [error, setError] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (!token) {
-      setLoading(false);
       setError('未登录');
+      setProfile(null);
       return;
     }
 
+    // 静默加载最新数据
     api.fetchProfile()
       .then((data) => {
         setProfile(data);
-        setLoading(false);
+        // 缓存用户数据到 localStorage
+        localStorage.setItem('userProfile', JSON.stringify(data));
       })
       .catch((err) => {
         setError(err.message || '请先登录');
-        setLoading(false);
+        setProfile(null);
       });
   }, []);
 
   const handleLogout = () => {
       localStorage.removeItem('authToken');
+      localStorage.removeItem('userProfile');
       setProfile(null);
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700 mx-auto"></div>
-          <p className="mt-4 text-gray-600">加载中...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (!profile || error) {
     return (
