@@ -14,11 +14,17 @@ export const api = {
 
   register: async (payload: { phone: string; code: string; inviteCode: string; password: string }) => {
     const data = await callEdgeFunction('auth', { action: 'register', ...payload });
+    if (data.token) {
+      setToken(data.token);
+    }
     return data as ApiLoginResponse;
   },
 
   login: async (payload: { phone: string; password: string }) => {
     const data = await callEdgeFunction('auth', { action: 'login', ...payload });
+    if (data.token) {
+      setToken(data.token);
+    }
     return data as ApiLoginResponse;
   },
 
