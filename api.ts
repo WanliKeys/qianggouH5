@@ -31,59 +31,8 @@ export const api = {
   // User endpoints
   fetchProfile: async () => {
     const token = getToken();
-    const { data: user } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', token)
-      .single();
-
-    if (!user) throw new Error('未登录或登录已失效');
-
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
-    const { data: todayOrders } = await supabase
-      .from('orders')
-      .select('id')
-      .eq('user_id', user.id)
-      .gte('created_at', todayStart.toISOString());
-
-    const { data: coupons } = await supabase
-      .from('coupons')
-      .select('amount')
-      .eq('user_id', user.id)
-      .eq('status', 'unused');
-
-    const { data: referrals } = await supabase
-      .from('referrals')
-      .select('id')
-      .eq('referrer_id', user.id);
-
-    const { data: config } = await supabase
-      .from('config')
-      .select('max_orders_per_day, coupon_cash_threshold')
-      .eq('id', 1)
-      .single();
-
-    const couponsBalance = coupons?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
-
-    return {
-      user: {
-        id: user.id,
-        phone: user.phone,
-        nickname: user.nickname,
-        inviteCode: user.invite_code,
-        isMainAccount: user.is_main_account,
-        agreementSignedAt: user.agreement_signed_at,
-      },
-      stats: {
-        todayOrders: todayOrders?.length || 0,
-        remainingQuota: user.is_main_account ? null : Math.max(0, (config?.max_orders_per_day || 3) - (todayOrders?.length || 0)),
-        couponsBalance,
-        referralCount: referrals?.length || 0,
-        couponCashThreshold: config?.coupon_cash_threshold || 100,
-      }
-    } as ApiProfile;
+    const data = await callEdgeFunction('auth', { action: 'get-profile' }, token);
+    return data as ApiProfile;
   },
 
   // Products
