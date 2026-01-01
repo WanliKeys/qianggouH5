@@ -1,13 +1,28 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EmptyState from '../components/EmptyState';
 import Header from '../components/Header';
 
 // Simple global state simulation could be here, but using local for demo
 const Cart: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Toggle this to see empty vs filled if we had auth logic
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    // 检查 localStorage 中是否有 authToken
+    return !!localStorage.getItem('authToken');
+  });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // 监听登录状态变化
+    const checkAuth = () => {
+      setIsLoggedIn(!!localStorage.getItem('authToken'));
+    };
+
+    // 设置定时检查（可选）
+    const interval = setInterval(checkAuth, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   if (!isLoggedIn) {
       return (
