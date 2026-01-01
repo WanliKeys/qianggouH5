@@ -42,10 +42,10 @@ const menuItems: MenuItem[] = [
     path: '/admin/members'
   },
   {
-    key: 'commission',
-    label: '佣金管理',
+    key: 'coupons',
+    label: '优惠券管理',
     icon: <Wallet size={18} />,
-    path: '/admin/commission'
+    path: '/admin/coupons'
   },
   {
     key: 'settings',

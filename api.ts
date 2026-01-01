@@ -333,5 +333,75 @@ export const api = {
       productId: payload.productId,
       note: payload.note
     }, token);
+  },
+
+  // Product Management
+  adminGetProducts: async () => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', { action: 'get-products' }, token);
+  },
+
+  adminAddProduct: async (payload: { title: string; subtitle?: string; basePrice: number; image?: string; tags?: string[] }) => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', {
+      action: 'add-product',
+      title: payload.title,
+      subtitle: payload.subtitle,
+      basePrice: payload.basePrice,
+      image: payload.image,
+      tags: payload.tags
+    }, token);
+  },
+
+  adminUpdateProduct: async (payload: { productId: string; title?: string; subtitle?: string; basePrice?: number; image?: string; tags?: string[] }) => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', {
+      action: 'update-product',
+      productId: payload.productId,
+      title: payload.title,
+      subtitle: payload.subtitle,
+      basePrice: payload.basePrice,
+      image: payload.image,
+      tags: payload.tags
+    }, token);
+  },
+
+  adminDeleteProduct: async (payload: { productId: string }) => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', {
+      action: 'delete-product',
+      productId: payload.productId
+    }, token);
+  },
+
+  // Member Management
+  adminGetUsers: async () => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', { action: 'get-users' }, token);
+  },
+
+  adminGetUserDetail: async (payload: { userId: string }) => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', {
+      action: 'get-user-detail',
+      userId: payload.userId
+    }, token);
+  },
+
+  // Coupon Management
+  adminGetCouponRecords: async () => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', { action: 'get-coupon-records' }, token);
+  },
+
+  adminGetCouponRedemptions: async () => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', { action: 'get-coupon-redemptions' }, token);
+  },
+
+  // Dashboard Stats
+  adminGetDashboardStats: async () => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', { action: 'get-dashboard-stats' }, token);
   }
 };

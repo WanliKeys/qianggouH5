@@ -31,6 +31,11 @@ import ChangePassword from './pages/ChangePassword';
 import ConfirmOrder from './pages/ConfirmOrder';
 import Admin from './pages/Admin';
 import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminOrders from './pages/admin/OrderManagement';
+import AdminProducts from './pages/admin/ProductManagement';
+import AdminMembers from './pages/admin/MemberManagement';
+import AdminCoupons from './pages/admin/CouponManagement';
 
 const App: React.FC = () => {
   return (
@@ -52,6 +57,11 @@ const App: React.FC = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/members" element={<AdminMembers />} />
+          <Route path="/admin/coupons" element={<AdminCoupons />} />
           <Route path="/settings/personal-info" element={<PersonalInfo />} />
           <Route path="/settings/security" element={<AccountSecurity />} />
           <Route path="/settings/change-password" element={<ChangePassword />} />
