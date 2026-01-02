@@ -54,11 +54,6 @@ const FlashSale: React.FC = () => {
         return;
       }
 
-      // 如果目标时间已过,尝试加一天
-      if (targetTime < now) {
-        targetTime.setDate(targetTime.getDate() + 1);
-      }
-
       const diff = targetTime.getTime() - now.getTime();
 
       if (diff <= 0) {
