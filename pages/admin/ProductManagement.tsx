@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import DataTable, { Column } from '../../components/admin/DataTable';
 import { api } from '../../api';
-import { Edit, Trash2, Plus } from 'lucide-react';
+import { supabase } from '../../supabaseClient';
+import { Edit, Trash2, Plus, Upload, Image as ImageIcon } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -31,6 +32,8 @@ const ProductManagement: React.FC = () => {
     image: '',
     tags: ''
   });
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>('');
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -47,6 +50,57 @@ const ProductManagement: React.FC = () => {
       setProducts(data.products);
     } catch (err: any) {
       setError(err.message || '加载失败');
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      setError('请选择图片文件');
+      return;
+    }
+
+    // 验证文件大小 (最大5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('图片大小不能超过5MB');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+
+    try {
+      // 生成唯一文件名
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      // 上传到Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      // 获取公共URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      // 更新表单数据和预览
+      setFormData({ ...formData, image: publicUrl });
+      setImagePreview(publicUrl);
+      setNotice('图片上传成功');
+      setTimeout(() => setNotice(''), 2000);
+    } catch (err: any) {
+      setError(err.message || '图片上传失败');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -117,6 +171,7 @@ const ProductManagement: React.FC = () => {
       image: product.image,
       tags: product.tags.join(', ')
     });
+    setImagePreview(product.image);
     setShowEditModal(true);
   };
 
@@ -234,7 +289,7 @@ const ProductManagement: React.FC = () => {
       {/* 添加商品弹窗 */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-medium text-slate-800 mb-4">添加商品</h3>
             <div className="space-y-3">
               <input
@@ -256,12 +311,59 @@ const ProductManagement: React.FC = () => {
                 placeholder="基础价格"
                 type="number"
               />
-              <input
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="图片URL (可选)"
-              />
+
+              {/* 图片上传区域 */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">商品图片</label>
+
+                {/* 图片预览 */}
+                {imagePreview && (
+                  <div className="relative w-full h-48 border-2 border-slate-200 rounded-lg overflow-hidden">
+                    <img src={imagePreview} alt="预览" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => {
+                        setImagePreview('');
+                        setFormData({ ...formData, image: '' });
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      title="删除图片"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
+
+                {/* 上传按钮 */}
+                <div className="flex gap-2">
+                  <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded cursor-pointer hover:bg-blue-700">
+                    <Upload size={16} />
+                    {uploading ? '上传中...' : '选择图片'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file);
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {/* URL输入 (可选) */}
+                <div className="text-xs text-slate-500 text-center">或</div>
+                <input
+                  value={formData.image}
+                  onChange={(e) => {
+                    setFormData({ ...formData, image: e.target.value });
+                    setImagePreview(e.target.value);
+                  }}
+                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="输入图片URL (可选)"
+                />
+              </div>
+
               <input
                 value={formData.tags}
                 onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
@@ -274,6 +376,7 @@ const ProductManagement: React.FC = () => {
                 onClick={() => {
                   setShowAddModal(false);
                   setFormData({ title: '', subtitle: '', basePrice: '', image: '', tags: '' });
+                  setImagePreview('');
                 }}
                 className="flex-1 bg-slate-200 text-slate-700 text-sm py-2 rounded hover:bg-slate-300"
               >
@@ -281,7 +384,8 @@ const ProductManagement: React.FC = () => {
               </button>
               <button
                 onClick={handleAddProduct}
-                className="flex-1 bg-green-700 text-white text-sm py-2 rounded hover:bg-green-800"
+                disabled={uploading}
+                className="flex-1 bg-green-700 text-white text-sm py-2 rounded hover:bg-green-800 disabled:bg-slate-300"
               >
                 确认添加
               </button>
@@ -293,7 +397,7 @@ const ProductManagement: React.FC = () => {
       {/* 编辑商品弹窗 */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-medium text-slate-800 mb-4">编辑商品</h3>
             <div className="space-y-3">
               <input
@@ -315,12 +419,59 @@ const ProductManagement: React.FC = () => {
                 placeholder="基础价格"
                 type="number"
               />
-              <input
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="图片URL"
-              />
+
+              {/* 图片上传区域 */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">商品图片</label>
+
+                {/* 图片预览 */}
+                {imagePreview && (
+                  <div className="relative w-full h-48 border-2 border-slate-200 rounded-lg overflow-hidden">
+                    <img src={imagePreview} alt="预览" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => {
+                        setImagePreview('');
+                        setFormData({ ...formData, image: '' });
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      title="删除图片"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
+
+                {/* 上传按钮 */}
+                <div className="flex gap-2">
+                  <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded cursor-pointer hover:bg-blue-700">
+                    <Upload size={16} />
+                    {uploading ? '上传中...' : '选择图片'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file);
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {/* URL输入 (可选) */}
+                <div className="text-xs text-slate-500 text-center">或</div>
+                <input
+                  value={formData.image}
+                  onChange={(e) => {
+                    setFormData({ ...formData, image: e.target.value });
+                    setImagePreview(e.target.value);
+                  }}
+                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="输入图片URL"
+                />
+              </div>
+
               <input
                 value={formData.tags}
                 onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
@@ -334,6 +485,7 @@ const ProductManagement: React.FC = () => {
                   setShowEditModal(false);
                   setEditingProduct(null);
                   setFormData({ title: '', subtitle: '', basePrice: '', image: '', tags: '' });
+                  setImagePreview('');
                 }}
                 className="flex-1 bg-slate-200 text-slate-700 text-sm py-2 rounded hover:bg-slate-300"
               >
@@ -341,7 +493,8 @@ const ProductManagement: React.FC = () => {
               </button>
               <button
                 onClick={handleEditProduct}
-                className="flex-1 bg-green-700 text-white text-sm py-2 rounded hover:bg-green-800"
+                disabled={uploading}
+                className="flex-1 bg-green-700 text-white text-sm py-2 rounded hover:bg-green-800 disabled:bg-slate-300"
               >
                 确认更新
               </button>

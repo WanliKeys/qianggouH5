@@ -145,16 +145,27 @@ const Register: React.FC = () => {
            </div>
        </div>
 
+       {/* Error Message */}
+       {error && (
+         <div className="w-full px-8 mt-6">
+           <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 flex items-center justify-center">
+             <svg className="w-5 h-5 text-red-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+             </svg>
+             <span className="text-base font-medium text-red-600">{error}</span>
+           </div>
+         </div>
+       )}
+
        {/* Submit Button */}
-       <div className="w-full px-8 mt-16">
-           <button 
+       <div className="w-full px-8 mt-8">
+           <button
             onClick={handleRegister}
             disabled={submitting}
             className={`w-full py-3 rounded-md text-lg font-medium transition-colors shadow-md ${submitting ? 'bg-gray-300 text-gray-600' : 'bg-[#2d5d39] text-white hover:bg-[#244a2d]'}`}
            >
                {submitting ? '提交中...' : '下一步'}
            </button>
-           {error && <div className="mt-3 text-center text-xs text-red-500">{error}</div>}
        </div>
     </div>
   );
