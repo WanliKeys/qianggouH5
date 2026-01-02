@@ -34,6 +34,17 @@ const OrderList: React.FC = () => {
       .catch((err) => setError(err.message || '加载失败'));
   }, []);
 
+  const getStatusText = (status: string) => {
+    const statusMap: Record<string, string> = {
+      pending_pay: '待付款',
+      listed: '已上架',
+      split: '已拆分',
+      completed: '已完成',
+      cancelled: '已取消'
+    };
+    return statusMap[status] || status;
+  };
+
   const filteredOrders = useMemo(() => {
     if (currentStatus === 'all') return orders;
     const statusMap: Record<string, string> = {
@@ -82,7 +93,7 @@ const OrderList: React.FC = () => {
               <div key={order.id} className="bg-white rounded-lg p-4 shadow-sm">
                 <div className="flex items-center justify-between text-sm text-gray-700">
                   <span>订单号 {order.id.slice(-6)}</span>
-                  <span className="text-green-700">{order.status}</span>
+                  <span className="text-green-700">{getStatusText(order.status)}</span>
                 </div>
                 <div className="mt-2 text-xs text-gray-500">
                   抢单价 ¥{order.price.toFixed(2)} ｜ 上架价 ¥{order.listingPrice.toFixed(2)}

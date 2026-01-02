@@ -172,13 +172,40 @@ export const api = {
   // Orders
   fetchOrders: async () => {
     const token = getToken();
-    const { data: orders } = await supabase
+    const { data: orders, error } = await supabase
       .from('orders')
       .select('*')
       .eq('user_id', token)
       .order('created_at', { ascending: false });
 
-    return { orders: orders || [] };
+    if (error) throw new Error(error.message);
+
+    // 转换字段名从 snake_case 到 camelCase
+    const mappedOrders = (orders || []).map(order => ({
+      id: order.id,
+      userId: order.user_id,
+      productId: order.product_id,
+      price: Number(order.price),
+      listingPrice: Number(order.listing_price),
+      listingFee: Number(order.listing_fee),
+      commissionFee: Number(order.commission_fee),
+      platformServiceFee: Number(order.platform_service_fee),
+      memberProfit: Number(order.member_profit),
+      note: order.note,
+      status: order.status,
+      parentId: order.parent_id,
+      splitIndex: order.split_index,
+      splitTotal: order.split_total,
+      assignedTo: order.assigned_to,
+      assignedAt: order.assigned_at,
+      paidAt: order.paid_at,
+      listedAt: order.listed_at,
+      availableAt: order.available_at,
+      splitAt: order.split_at,
+      createdAt: order.created_at
+    }));
+
+    return { orders: mappedOrders };
   },
 
   // Referrals
