@@ -272,6 +272,38 @@ export const api = {
     return { address };
   },
 
+  // Payment Methods
+  fetchPaymentMethods: async () => {
+    const token = getToken();
+    const { data: paymentMethods, error } = await supabase
+      .from('payment_methods')
+      .select('*')
+      .eq('user_id', token);
+
+    if (error) throw new Error(error.message);
+
+    return { paymentMethods: paymentMethods || [] };
+  },
+
+  savePaymentMethod: async (payload: { type: string; details: any }) => {
+    const token = getToken();
+    const { data, error } = await supabase
+      .from('payment_methods')
+      .upsert({
+        user_id: token,
+        type: payload.type,
+        details: payload.details
+      }, {
+        onConflict: 'user_id,type'
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return { paymentMethod: data };
+  },
+
   // Admin endpoints
   adminLogin: async (payload: { username: string; password: string }) => {
     return await callEdgeFunction('admin', {

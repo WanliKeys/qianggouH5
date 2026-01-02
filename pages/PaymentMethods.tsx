@@ -10,6 +10,7 @@ const PaymentMethods: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [loading, setLoading] = useState(true);
 
   // 银行卡表单
   const [bankForm, setBankForm] = useState({
@@ -36,6 +37,48 @@ const PaymentMethods: React.FC = () => {
     verifyCode: ''
   });
   const [wechatPreview, setWechatPreview] = useState('');
+
+  // 加载已保存的收款方式
+  useEffect(() => {
+    const loadPaymentMethods = async () => {
+      try {
+        const { paymentMethods } = await api.fetchPaymentMethods();
+
+        paymentMethods.forEach((pm: any) => {
+          if (pm.type === 'bank') {
+            setBankForm({
+              name: pm.details.name || '星辰',
+              reservedPhone: pm.details.reservedPhone || '18800737877',
+              cardNumber: pm.details.cardNumber || '',
+              bankName: pm.details.bankName || '',
+              phone: pm.details.phone || '18800737877',
+              verifyCode: ''
+            });
+          } else if (pm.type === 'alipay') {
+            setAlipayForm({
+              qrCode: pm.details.qrCode || '',
+              phone: pm.details.phone || '18800737877',
+              verifyCode: ''
+            });
+            setAlipayPreview(pm.details.qrCode || '');
+          } else if (pm.type === 'wechat') {
+            setWechatForm({
+              qrCode: pm.details.qrCode || '',
+              phone: pm.details.phone || '18800737877',
+              verifyCode: ''
+            });
+            setWechatPreview(pm.details.qrCode || '');
+          }
+        });
+      } catch (err: any) {
+        console.error('加载收款方式失败:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPaymentMethods();
+  }, []);
 
   // 图片上传处理
   const handleImageUpload = async (file: File, type: 'alipay' | 'wechat') => {
@@ -91,9 +134,26 @@ const PaymentMethods: React.FC = () => {
 
   // 保存银行卡
   const handleSaveBank = async () => {
-    // TODO: 调用保存API
-    setNotice('银行卡信息已保存');
-    setTimeout(() => setNotice(''), 2000);
+    setError('');
+    setNotice('');
+
+    try {
+      await api.savePaymentMethod({
+        type: 'bank',
+        details: {
+          name: bankForm.name,
+          reservedPhone: bankForm.reservedPhone,
+          cardNumber: bankForm.cardNumber,
+          bankName: bankForm.bankName,
+          phone: bankForm.phone
+        }
+      });
+
+      setNotice('银行卡信息已保存');
+      setTimeout(() => setNotice(''), 2000);
+    } catch (err: any) {
+      setError(err.message || '保存失败');
+    }
   };
 
   // 保存支付宝
@@ -102,9 +162,24 @@ const PaymentMethods: React.FC = () => {
       setError('请上传支付宝收款码');
       return;
     }
-    // TODO: 调用保存API
-    setNotice('支付宝收款码已保存');
-    setTimeout(() => setNotice(''), 2000);
+
+    setError('');
+    setNotice('');
+
+    try {
+      await api.savePaymentMethod({
+        type: 'alipay',
+        details: {
+          qrCode: alipayForm.qrCode,
+          phone: alipayForm.phone
+        }
+      });
+
+      setNotice('支付宝收款码已保存');
+      setTimeout(() => setNotice(''), 2000);
+    } catch (err: any) {
+      setError(err.message || '保存失败');
+    }
   };
 
   // 保存微信
@@ -113,9 +188,24 @@ const PaymentMethods: React.FC = () => {
       setError('请上传微信收款码');
       return;
     }
-    // TODO: 调用保存API
-    setNotice('微信收款码已保存');
-    setTimeout(() => setNotice(''), 2000);
+
+    setError('');
+    setNotice('');
+
+    try {
+      await api.savePaymentMethod({
+        type: 'wechat',
+        details: {
+          qrCode: wechatForm.qrCode,
+          phone: wechatForm.phone
+        }
+      });
+
+      setNotice('微信收款码已保存');
+      setTimeout(() => setNotice(''), 2000);
+    } catch (err: any) {
+      setError(err.message || '保存失败');
+    }
   };
 
   // 模拟发送验证码
@@ -138,7 +228,7 @@ const PaymentMethods: React.FC = () => {
   return (
     <div className="bg-gray-100 min-h-screen pb-8">
       <Header title="收款管理" />
-      
+
       {/* Tabs */}
       <div className="bg-[#1e5530] px-4 py-2 flex justify-between items-center text-sm">
           <button
@@ -161,19 +251,26 @@ const PaymentMethods: React.FC = () => {
           </button>
       </div>
 
+      {/* 加载状态 */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-gray-500">加载中...</div>
+        </div>
+      )}
+
       {/* 提示信息 */}
-      {error && (
+      {!loading && error && (
         <div className="mx-4 mt-4 bg-red-50 border border-red-300 rounded-lg p-3 text-sm text-red-600">
           {error}
         </div>
       )}
-      {notice && (
+      {!loading && notice && (
         <div className="mx-4 mt-4 bg-green-50 border border-green-300 rounded-lg p-3 text-sm text-green-600">
           {notice}
         </div>
       )}
 
-      {tab === 'bank' && (
+      {!loading && tab === 'bank' && (
           <div className="mt-4 mx-4 bg-white rounded-lg px-4 pb-4">
               {/* 姓名 - 可编辑 */}
               <div className="flex py-4 border-b border-gray-100 items-center">
@@ -248,7 +345,7 @@ const PaymentMethods: React.FC = () => {
           </div>
       )}
 
-      {tab === 'alipay' && (
+      {!loading && tab === 'alipay' && (
            <div className="flex flex-col">
                {/* 二维码上传区域 */}
                <div className="mt-4 bg-white py-8 flex flex-col items-center">
@@ -317,7 +414,7 @@ const PaymentMethods: React.FC = () => {
            </div>
       )}
 
-      {tab === 'wechat' && (
+      {!loading && tab === 'wechat' && (
            <div className="flex flex-col">
                {/* 二维码上传区域 */}
                <div className="mt-4 bg-white py-8 flex flex-col items-center">
@@ -386,20 +483,22 @@ const PaymentMethods: React.FC = () => {
            </div>
       )}
 
-      <div className="mt-16 px-4">
-          <button
-            onClick={() => {
-              if (tab === 'bank') handleSaveBank();
-              else if (tab === 'alipay') handleSaveAlipay();
-              else handleSaveWechat();
-            }}
-            disabled={uploading}
-            className={`w-full py-3 rounded-lg font-medium text-lg shadow-none ${uploading ? 'bg-gray-300 text-gray-600' : 'bg-[#1e5530] text-white'}`}
-          >
-              {uploading ? '上传中...' : `保存${tab === 'bank' ? '银行卡' : tab === 'alipay' ? '支付宝二维码' : '微信二维码'}`}
-          </button>
-           <p className="text-center text-gray-400 text-xs mt-4">请您仔细阅读并理解《委托寄售协议》</p>
-      </div>
+      {!loading && (
+        <div className="mt-16 px-4">
+            <button
+              onClick={() => {
+                if (tab === 'bank') handleSaveBank();
+                else if (tab === 'alipay') handleSaveAlipay();
+                else handleSaveWechat();
+              }}
+              disabled={uploading}
+              className={`w-full py-3 rounded-lg font-medium text-lg shadow-none ${uploading ? 'bg-gray-300 text-gray-600' : 'bg-[#1e5530] text-white'}`}
+            >
+                {uploading ? '上传中...' : `保存${tab === 'bank' ? '银行卡' : tab === 'alipay' ? '支付宝二维码' : '微信二维码'}`}
+            </button>
+             <p className="text-center text-gray-400 text-xs mt-4">请您仔细阅读并理解《委托寄售协议》</p>
+        </div>
+      )}
 
     </div>
   );
