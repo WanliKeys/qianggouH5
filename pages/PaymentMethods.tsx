@@ -118,6 +118,23 @@ const PaymentMethods: React.FC = () => {
     setTimeout(() => setNotice(''), 2000);
   };
 
+  // 模拟发送验证码
+  const handleSendVerifyCode = (type: 'bank' | 'alipay' | 'wechat') => {
+    setError('');
+    const mockCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    if (type === 'bank') {
+      setBankForm({ ...bankForm, verifyCode: mockCode });
+    } else if (type === 'alipay') {
+      setAlipayForm({ ...alipayForm, verifyCode: mockCode });
+    } else {
+      setWechatForm({ ...wechatForm, verifyCode: mockCode });
+    }
+
+    setNotice('验证码已发送');
+    setTimeout(() => setNotice(''), 2000);
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen pb-8">
       <Header title="收款管理" />
@@ -204,7 +221,12 @@ const PaymentMethods: React.FC = () => {
               {/* 手机号 */}
                <div className="flex py-4 border-b border-gray-100 items-center">
                     <span className="w-24 text-gray-600 text-base">手机号</span>
-                    <span className="text-gray-400 text-base">{bankForm.phone}</span>
+                    <input
+                      type="tel"
+                      className="flex-1 outline-none text-gray-800 text-base bg-transparent shadow-none appearance-none"
+                      value={bankForm.phone}
+                      onChange={(e) => setBankForm({ ...bankForm, phone: e.target.value })}
+                    />
                </div>
 
               {/* 验证码 */}
@@ -216,7 +238,12 @@ const PaymentMethods: React.FC = () => {
                       value={bankForm.verifyCode}
                       onChange={(e) => setBankForm({ ...bankForm, verifyCode: e.target.value })}
                     />
-                    <button className="bg-[#1e5530] text-white text-xs px-3 py-1.5 rounded shadow-none">获取验证码</button>
+                    <button
+                      onClick={() => handleSendVerifyCode('bank')}
+                      className="bg-[#1e5530] text-white text-xs px-3 py-1.5 rounded shadow-none"
+                    >
+                      获取验证码
+                    </button>
                </div>
           </div>
       )}
@@ -264,7 +291,12 @@ const PaymentMethods: React.FC = () => {
                 <div className="mt-4 bg-white px-4">
                     <div className="flex py-4 border-b border-gray-100 items-center">
                         <span className="w-24 text-gray-800 text-base">手机号</span>
-                        <span className="text-gray-500 text-base">{alipayForm.phone}</span>
+                        <input
+                          type="tel"
+                          className="flex-1 outline-none text-gray-800 text-base bg-transparent shadow-none appearance-none"
+                          value={alipayForm.phone}
+                          onChange={(e) => setAlipayForm({ ...alipayForm, phone: e.target.value })}
+                        />
                     </div>
                     <div className="flex py-4 items-center justify-between">
                         <span className="w-24 text-gray-800 text-base">验证码</span>
@@ -274,7 +306,12 @@ const PaymentMethods: React.FC = () => {
                           value={alipayForm.verifyCode}
                           onChange={(e) => setAlipayForm({ ...alipayForm, verifyCode: e.target.value })}
                         />
-                        <button className="bg-[#1e5530] text-white text-sm px-4 py-1.5 rounded shadow-none">获取验证码</button>
+                        <button
+                          onClick={() => handleSendVerifyCode('alipay')}
+                          className="bg-[#1e5530] text-white text-sm px-4 py-1.5 rounded shadow-none"
+                        >
+                          获取验证码
+                        </button>
                     </div>
                 </div>
            </div>
@@ -323,7 +360,12 @@ const PaymentMethods: React.FC = () => {
                 <div className="mt-4 bg-white px-4">
                     <div className="flex py-4 border-b border-gray-100 items-center">
                         <span className="w-24 text-gray-800 text-base">手机号</span>
-                        <span className="text-gray-500 text-base">{wechatForm.phone}</span>
+                        <input
+                          type="tel"
+                          className="flex-1 outline-none text-gray-800 text-base bg-transparent shadow-none appearance-none"
+                          value={wechatForm.phone}
+                          onChange={(e) => setWechatForm({ ...wechatForm, phone: e.target.value })}
+                        />
                     </div>
                     <div className="flex py-4 items-center justify-between">
                         <span className="w-24 text-gray-800 text-base">验证码</span>
@@ -333,7 +375,10 @@ const PaymentMethods: React.FC = () => {
                             value={wechatForm.verifyCode}
                             onChange={(e) => setWechatForm({ ...wechatForm, verifyCode: e.target.value })}
                         />
-                        <button className="bg-[#1e5530] text-white text-sm px-4 py-1.5 rounded shadow-none">
+                        <button
+                          onClick={() => handleSendVerifyCode('wechat')}
+                          className="bg-[#1e5530] text-white text-sm px-4 py-1.5 rounded shadow-none"
+                        >
                             获取验证码
                         </button>
                     </div>
