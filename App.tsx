@@ -43,7 +43,7 @@ import AdminSettings from './pages/admin/SystemSettings';
 // 设置为 true 开启维护模式，false 关闭维护模式
 // 注意：管理员后台 (/admin) 不受影响，可以正常访问
 // ==========================================
-const MAINTENANCE_MODE = false;
+const MAINTENANCE_MODE = true;
 
 // 维护页面组件
 const MaintenancePage: React.FC = () => {
