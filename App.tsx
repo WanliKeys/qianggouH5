@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import FlashSale from './pages/FlashSale';
@@ -38,11 +38,84 @@ import AdminMembers from './pages/admin/MemberManagement';
 import AdminCoupons from './pages/admin/CouponManagement';
 import AdminSettings from './pages/admin/SystemSettings';
 
-const App: React.FC = () => {
+// ==========================================
+// 维护模式开关
+// 设置为 true 开启维护模式，false 关闭维护模式
+// 注意：管理员后台 (/admin) 不受影响，可以正常访问
+// ==========================================
+const MAINTENANCE_MODE = false;
+
+// 维护页面组件
+const MaintenancePage: React.FC = () => {
   return (
-    <Router>
-      <Layout>
-        <Routes>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '20px',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      <div style={{
+        background: 'white',
+        borderRadius: '16px',
+        padding: '48px 32px',
+        maxWidth: '480px',
+        width: '100%',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px'
+        }}>
+          🔧
+        </div>
+        <h1 style={{
+          fontSize: '28px',
+          fontWeight: '600',
+          color: '#1a202c',
+          marginBottom: '16px',
+          margin: '0'
+        }}>
+          系统维护中
+        </h1>
+        <p style={{
+          fontSize: '16px',
+          color: '#718096',
+          lineHeight: '1.6',
+          marginBottom: '32px'
+        }}>
+          网站正在进行系统升级和维护<br />
+          预计很快恢复，敬请谅解
+        </p>
+        <div style={{
+          fontSize: '14px',
+          color: '#a0aec0',
+          paddingTop: '24px',
+          borderTop: '1px solid #e2e8f0'
+        }}>
+          如有紧急问题，请联系客服
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 路由包装器，用于检查维护模式
+const AppRoutes: React.FC = () => {
+  const location = useLocation();
+
+  // 如果开启了维护模式，且不是管理员路径，则显示维护页面
+  if (MAINTENANCE_MODE && !location.pathname.startsWith('/admin')) {
+    return <MaintenancePage />;
+  }
+
+  return (
+    <Layout>
+      <Routes>
           {/* Main Tabs */}
           <Route path="/" element={<Home />} />
           <Route path="/flash-sale" element={<FlashSale />} />
@@ -96,6 +169,13 @@ const App: React.FC = () => {
           <Route path="*" element={<OrderList />} />
         </Routes>
       </Layout>
+    );
+};
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <AppRoutes />
     </Router>
   );
 };
