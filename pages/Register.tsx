@@ -38,15 +38,22 @@ const Register: React.FC = () => {
     setSending(true);
     setError('');
 
-    // 模拟发送验证码,生成随机6位数字
-    setTimeout(() => {
-      const mockCode = Math.floor(100000 + Math.random() * 900000).toString();
-      setFormData(prev => ({ ...prev, code: mockCode }));
+    try {
+      const res = await api.sendCode(formData.phone);
       setSending(false);
-      // 可选:显示成功提示
-      setError('验证码已发送到您的手机');
-      setTimeout(() => setError(''), 2000);
-    }, 1000);
+
+      // 开发环境：如果API返回了验证码，自动填充（生产环境不会返回）
+      if (res.code) {
+        setFormData(prev => ({ ...prev, code: res.code }));
+      }
+
+      // 显示成功提示
+      setError(res.message || '验证码已发送');
+      setTimeout(() => setError(''), 3000);
+    } catch (err: any) {
+      setSending(false);
+      setError(err.message || '发送失败，请重试');
+    }
   };
 
   const handleRegister = async () => {

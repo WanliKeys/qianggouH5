@@ -9,7 +9,7 @@ export const api = {
 
   // Auth endpoints
   sendCode: async (phone: string) => {
-    return await callEdgeFunction('auth', { action: 'send-code', phone });
+    return await callEdgeFunction('sms', { action: 'send-code', phone });
   },
 
   register: async (payload: { phone: string; code: string; inviteCode: string; password: string }) => {
