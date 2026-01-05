@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
 import { Clock } from 'lucide-react';
 import { api } from '../api';
-import type { ApiFlashSale, ApiProduct } from '../types';
+import type { ApiFlashSale, ApiFlashSaleItem } from '../types';
 
 const FlashSale: React.FC = () => {
   const navigate = useNavigate();
@@ -81,8 +81,8 @@ const FlashSale: React.FC = () => {
     return '抢单进行中';
   }, [data]);
 
-  const handleOrder = (product: ApiProduct) => {
-    navigate('/confirm-order', { state: { productId: product.id } });
+  const handleOrder = (item: ApiFlashSaleItem) => {
+    navigate('/confirm-order', { state: { listingId: item.listingId } });
   };
 
   return (
@@ -114,33 +114,41 @@ const FlashSale: React.FC = () => {
           {error}
         </div>
       )}
-      <div className="p-4 grid grid-cols-2 gap-3">
-         {(data?.products || []).map((product) => (
-          <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-sm flex flex-col">
-            <img 
-              src={product.image} 
-              alt={product.title} 
-              className="w-full h-40 object-cover"
-            />
-            <div className="p-2 flex-1 flex flex-col justify-between">
-              <div>
-                <h3 className="font-bold text-sm text-gray-800 truncate">{product.title}</h3>
-                <p className="text-xs text-gray-500 mt-1 truncate">{product.subtitle}</p>
+
+      {/* 上架后展示商品列表（抢购阶段可点击） */}
+      {(data?.status === 'listing' || data?.status === 'flash_sale') && (
+        <div className="p-4 grid grid-cols-2 gap-3">
+           {(data?.products || []).map((product) => (
+            <div key={product.listingId} className="bg-white rounded-lg overflow-hidden shadow-sm flex flex-col">
+              <img
+                src={product.image}
+                alt={product.title}
+                className="w-full h-40 object-cover"
+              />
+              <div className="p-2 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-sm text-gray-800 truncate">{product.title}</h3>
+                  <p className="text-xs text-gray-500 mt-1 truncate">{product.subtitle}</p>
+                </div>
+                <div className="mt-2">
+                  <span className="text-red-600 font-bold text-base">¥ {product.price.toFixed(2)}</span>
+                </div>
               </div>
-              <div className="mt-2">
-                <span className="text-red-600 font-bold text-base">¥ {product.price.toFixed(2)}</span>
-              </div>
+              <button
+                onClick={() => handleOrder(product)}
+                disabled={data?.status !== 'flash_sale' || product.soldOut}
+                className={`text-white text-sm py-1.5 text-center transition-colors ${
+                  data?.status !== 'flash_sale' || product.soldOut
+                    ? 'bg-gray-400'
+                    : 'bg-green-600 active:bg-green-700'
+                }`}
+              >
+                {product.soldOut ? '已售罄' : data?.status === 'flash_sale' ? '马上抢' : '未开始'}
+              </button>
             </div>
-            <button 
-              onClick={() => handleOrder(product)}
-              disabled={data?.status !== 'flash_sale'}
-              className={`text-white text-sm py-1.5 text-center transition-colors ${data?.status === 'flash_sale' ? 'bg-green-600 active:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
-            >
-              {data?.status === 'flash_sale' ? '马上抢' : '未开始'}
-            </button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

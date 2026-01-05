@@ -4,32 +4,33 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { MapPin, ChevronRight } from 'lucide-react';
 import { api } from '../api';
-import type { ApiAddress, ApiProduct } from '../types';
+import type { ApiAddress, ApiFlashSaleItem } from '../types';
 
 const ConfirmOrder: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const productId = (location.state as { productId?: string } | null)?.productId;
+  const listingId = (location.state as { listingId?: string } | null)?.listingId;
   const [usePoints, setUsePoints] = useState(false);
-  const [product, setProduct] = useState<ApiProduct | null>(null);
+  const [product, setProduct] = useState<ApiFlashSaleItem | null>(null);
   const [addresses, setAddresses] = useState<ApiAddress[]>([]);
   const [note, setNote] = useState('');
-  const [signature, setSignature] = useState('');
-  const [agreementAccepted, setAgreementAccepted] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    api.fetchProducts()
-      .then((data) => {
-        if (!mounted) return;
-        const found = data.products.find((item) => item.id === productId) || data.products[0] || null;
-        setProduct(found);
-      })
-      .catch((err) => {
-        if (mounted) setError(err.message || '加载失败');
-      });
+    if (!listingId) {
+      setError('缺少商品信息');
+    } else {
+      api.fetchFlashListing({ listingId })
+        .then((data) => {
+          if (!mounted) return;
+          setProduct(data.listing || null);
+        })
+        .catch((err) => {
+          if (mounted) setError(err.message || '加载失败');
+        });
+    }
     api.fetchAddresses()
       .then((data) => {
         if (mounted) setAddresses(data.addresses);
@@ -40,7 +41,7 @@ const ConfirmOrder: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [productId]);
+  }, [listingId]);
 
   const defaultAddress = useMemo(
     () => addresses.find((addr) => addr.isDefault) || addresses[0],
@@ -49,23 +50,21 @@ const ConfirmOrder: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!product) return;
-    if (!defaultAddress) {
-      setError('请先填写收货地址');
+    if (product.soldOut) {
+      setError('该商品已售罄');
       return;
     }
-    if (!signature.trim() || !agreementAccepted) {
-      setError('请阅读协议并签名确认');
+    if (!defaultAddress) {
+      setError('请先填写收货地址');
       return;
     }
     setError('');
     setSubmitting(true);
     try {
       const res = await api.createFlashOrder({
-        productId: product.id,
+        listingId: product.listingId,
         note,
-        usePoints,
-        signature,
-        agreementAccepted
+        usePoints
       });
       alert(res.message);
       navigate('/orders');
@@ -147,30 +146,6 @@ const ConfirmOrder: React.FC = () => {
                   </button>
               </div>
           </div>
-      </div>
-
-      {/* Agreement */}
-      <div className="mx-3 mt-3 bg-white rounded-xl p-4 shadow-sm space-y-3">
-        <div className="text-gray-800 text-base font-medium">抢单协议确认</div>
-        <div className="text-xs text-gray-500 leading-relaxed">
-          请阅读《抢单注册协议》，签名确认后方可提交抢单。
-        </div>
-        <input
-          type="text"
-          value={signature}
-          onChange={(e) => setSignature(e.target.value)}
-          placeholder="请输入签名"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-        />
-        <label className="flex items-center text-sm text-gray-700">
-          <input
-            type="checkbox"
-            checked={agreementAccepted}
-            onChange={(e) => setAgreementAccepted(e.target.checked)}
-            className="mr-2"
-          />
-          我已阅读并同意《抢单注册协议》
-        </label>
       </div>
 
       {error && (

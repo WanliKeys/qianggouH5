@@ -110,78 +110,38 @@ export const api = {
 
   // Flash sale
   fetchFlashSale: async () => {
-    const { data: config } = await supabase
-      .from('config')
-      .select('*')
-      .eq('id', 1)
-      .single();
-
-    const { data: statusData } = await supabase
-      .rpc('get_time_status', {
-        listing_start: config?.listing_start || '10:00',
-        flash_sale_start: config?.flash_sale_start || '10:30'
-      });
-
-    const { data: products } = await supabase
-      .from('products')
-      .select('*');
-
-    const productsWithPrice = await Promise.all((products || []).map(async (product) => {
-      const { data: price } = await supabase
-        .rpc('get_price_for_today', {
-          base_price: product.base_price,
-          rate: config?.daily_increase_rate || 0.05,
-          base_date: config?.base_date || '2024-01-01'
-        });
-
-      return {
-        id: product.id,
-        title: product.title,
-        subtitle: product.subtitle,
-        price: price || product.base_price,
-        image: product.image,
-        tags: product.tags
-      };
-    }));
-
-    return {
-      status: statusData,
-      openAt: config?.flash_sale_start || '10:30',
-      listingAt: config?.listing_start || '10:00',
-      products: productsWithPrice
-    } as ApiFlashSale;
+    const data = await callEdgeFunction('flash-sale', { action: 'get-flash-sale' });
+    return data as ApiFlashSale;
   },
 
   createFlashOrder: async (payload: {
-    productId: string;
+    listingId: string;
     note: string;
     usePoints: boolean;
-    signature: string;
-    agreementAccepted: boolean;
   }) => {
     const token = getToken();
     return await callEdgeFunction('flash-sale', {
       action: 'create-order',
-      productId: payload.productId,
-      note: payload.note,
-      signature: payload.signature,
-      agreementAccepted: payload.agreementAccepted
+      listingId: payload.listingId,
+      note: payload.note
     }, token);
+  },
+
+  fetchFlashListing: async (payload: { listingId: string }) => {
+    const data = await callEdgeFunction('flash-sale', {
+      action: 'get-listing',
+      listingId: payload.listingId,
+    });
+    return data as { listing: any };
   },
 
   // Orders
   fetchOrders: async () => {
     const token = getToken();
-    const { data: orders, error } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('user_id', token)
-      .order('created_at', { ascending: false });
+    const data = await callEdgeFunction('user', { action: 'get-orders' }, token);
+    const orders = data.orders || [];
 
-    if (error) throw new Error(error.message);
-
-    // 转换字段名从 snake_case 到 camelCase
-    const mappedOrders = (orders || []).map(order => ({
+    const mappedOrders = (orders || []).map((order: any) => ({
       id: order.id,
       userId: order.user_id,
       productId: order.product_id,
@@ -202,7 +162,12 @@ export const api = {
       listedAt: order.listed_at,
       availableAt: order.available_at,
       splitAt: order.split_at,
-      createdAt: order.created_at
+      createdAt: order.created_at,
+      product: order.product ? {
+        title: order.product.title,
+        subtitle: order.product.subtitle,
+        image: order.product.image
+      } : null
     }));
 
     return { orders: mappedOrders };
@@ -270,65 +235,54 @@ export const api = {
   // Addresses
   fetchAddresses: async () => {
     const token = getToken();
-    const { data: addresses } = await supabase
-      .from('addresses')
-      .select('*')
-      .eq('user_id', token)
-      .order('created_at', { ascending: false });
-
-    return { addresses: addresses || [] } as { addresses: ApiAddress[] };
+    const data = await callEdgeFunction('user', { action: 'get-addresses' }, token);
+    const mapped = (data.addresses || []).map((a: any) => ({
+      id: a.id,
+      name: a.name,
+      phone: a.phone,
+      region: a.region,
+      detail: a.detail,
+      isDefault: !!a.is_default,
+    }));
+    return { addresses: mapped } as { addresses: ApiAddress[] };
   },
 
   addAddress: async (payload: ApiAddress) => {
     const token = getToken();
-    const { data: address, error } = await supabase
-      .from('addresses')
-      .insert({
-        user_id: token,
-        name: payload.name,
-        phone: payload.phone,
-        region: payload.region,
-        detail: payload.detail,
-        is_default: payload.isDefault
-      })
-      .select()
-      .single();
+    const data = await callEdgeFunction('user', {
+      action: 'add-address',
+      name: payload.name,
+      phone: payload.phone,
+      region: payload.region,
+      detail: payload.detail,
+      isDefault: payload.isDefault,
+    }, token);
 
-    if (error) throw new Error(error.message);
-
-    return { address };
+    return { address: data.address };
   },
 
   // Payment Methods
   fetchPaymentMethods: async () => {
     const token = getToken();
-    const { data: paymentMethods, error } = await supabase
-      .from('payment_methods')
-      .select('*')
-      .eq('user_id', token);
-
-    if (error) throw new Error(error.message);
-
-    return { paymentMethods: paymentMethods || [] };
+    const data = await callEdgeFunction('user', { action: 'get-payment-methods' }, token);
+    return { paymentMethods: data.paymentMethods || [] };
   },
 
   savePaymentMethod: async (payload: { type: string; details: any }) => {
     const token = getToken();
-    const { data, error } = await supabase
-      .from('payment_methods')
-      .upsert({
-        user_id: token,
-        type: payload.type,
-        details: payload.details
-      }, {
-        onConflict: 'user_id,type'
-      })
-      .select()
-      .single();
+    const data = await callEdgeFunction('user', {
+      action: 'save-payment-method',
+      type: payload.type,
+      details: payload.details
+    }, token);
 
-    if (error) throw new Error(error.message);
+    return { paymentMethod: data.paymentMethod };
+  },
 
-    return { paymentMethod: data };
+  fetchWarehouses: async () => {
+    const token = getToken();
+    const data = await callEdgeFunction('user', { action: 'get-warehouses' }, token);
+    return data as { buyer: any[]; seller: any[] };
   },
 
   // Admin endpoints
@@ -437,6 +391,21 @@ export const api = {
   adminGetUsers: async () => {
     const token = localStorage.getItem('adminToken') || '';
     return await callEdgeFunction('admin', { action: 'get-users' }, token);
+  },
+
+  adminLockUser: async (payload: { userId: string }) => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', { action: 'lock-user', userId: payload.userId }, token);
+  },
+
+  adminUnlockUser: async (payload: { userId: string }) => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', { action: 'unlock-user', userId: payload.userId }, token);
+  },
+
+  adminDeleteUser: async (payload: { userId: string }) => {
+    const token = localStorage.getItem('adminToken') || '';
+    return await callEdgeFunction('admin', { action: 'delete-user', userId: payload.userId }, token);
   },
 
   adminGetUserDetail: async (payload: { userId: string }) => {

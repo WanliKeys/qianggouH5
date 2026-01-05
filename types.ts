@@ -35,6 +35,18 @@ export interface ApiProduct {
   tags?: string[];
 }
 
+export interface ApiFlashSaleItem {
+  listingId: string;
+  productId: string;
+  title: string;
+  subtitle: string;
+  price: number;
+  image: string;
+  tags?: string[];
+  soldOut: boolean;
+  availableAt?: string | null;
+}
+
 export interface ApiLoginResponse {
   message: string;
   user: ApiUser;
@@ -65,7 +77,7 @@ export interface ApiFlashSale {
   status: 'before_listing' | 'listing' | 'flash_sale';
   openAt: string;
   listingAt: string;
-  products: ApiProduct[];
+  products: ApiFlashSaleItem[];
 }
 
 export interface ApiCoupon {

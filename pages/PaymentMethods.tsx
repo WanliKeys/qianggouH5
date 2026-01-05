@@ -208,21 +208,31 @@ const PaymentMethods: React.FC = () => {
     }
   };
 
-  // 模拟发送验证码
-  const handleSendVerifyCode = (type: 'bank' | 'alipay' | 'wechat') => {
+  // 发送验证码（当前后端为测试码 123456，会在响应里返回 code，方便联调）
+  const handleSendVerifyCode = async (type: 'bank' | 'alipay' | 'wechat') => {
     setError('');
-    const mockCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setNotice('');
 
-    if (type === 'bank') {
-      setBankForm({ ...bankForm, verifyCode: mockCode });
-    } else if (type === 'alipay') {
-      setAlipayForm({ ...alipayForm, verifyCode: mockCode });
-    } else {
-      setWechatForm({ ...wechatForm, verifyCode: mockCode });
+    const phone =
+      type === 'bank'
+        ? bankForm.phone
+        : type === 'alipay'
+          ? alipayForm.phone
+          : wechatForm.phone;
+
+    if (!phone) {
+      setError('请先填写手机号');
+      return;
     }
 
-    setNotice('验证码已发送');
-    setTimeout(() => setNotice(''), 2000);
+    try {
+      const res = await api.sendCode(phone);
+      const codeHint = res?.code ? `（测试码：${res.code}）` : '';
+      setNotice(`验证码已发送${codeHint}`);
+      setTimeout(() => setNotice(''), 3000);
+    } catch (err: any) {
+      setError(err.message || '验证码发送失败');
+    }
   };
 
   return (

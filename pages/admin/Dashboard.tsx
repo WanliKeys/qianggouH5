@@ -17,6 +17,8 @@ interface DashboardStats {
   todaySales: number;
   totalMembers: number;
   totalCommission: number;
+  todayPlatformServiceFee: number;
+  totalPlatformServiceFee: number;
   pendingOrders: number;
 }
 
@@ -37,6 +39,8 @@ const Dashboard: React.FC = () => {
     todaySales: 0,
     totalMembers: 0,
     totalCommission: 0,
+    todayPlatformServiceFee: 0,
+    totalPlatformServiceFee: 0,
     pendingOrders: 0
   });
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
@@ -125,7 +129,7 @@ const Dashboard: React.FC = () => {
   return (
     <AdminLayout title="仪表盘">
       {/* 顶部统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         <StatCard
           label="今日订单"
           value={stats.todayOrders}
@@ -141,6 +145,13 @@ const Dashboard: React.FC = () => {
           color="green"
         />
         <StatCard
+          label="今日技术服务费"
+          value={`¥${stats.todayPlatformServiceFee.toFixed(2)}`}
+          description="平台技术服务费"
+          icon={<Wallet size={24} />}
+          color="orange"
+        />
+        <StatCard
           label="总会员数"
           value={stats.totalMembers}
           description="已注册会员"
@@ -153,6 +164,13 @@ const Dashboard: React.FC = () => {
           description="优惠券总额"
           icon={<Wallet size={24} />}
           color="orange"
+        />
+        <StatCard
+          label="技术服务费总额"
+          value={`¥${stats.totalPlatformServiceFee.toFixed(2)}`}
+          description="平台累计技术服务费"
+          icon={<Wallet size={24} />}
+          color="blue"
         />
       </div>
 

@@ -13,6 +13,7 @@ const Register: React.FC = () => {
     inviteCode: '',
     password: ''
   });
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
   const [sending, setSending] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -51,6 +52,10 @@ const Register: React.FC = () => {
   const handleRegister = async () => {
     if (!formData.phone || !formData.code || !formData.inviteCode || !formData.password) {
       setError('手机号、验证码、邀请码、密码为必填');
+      return;
+    }
+    if (!agreementAccepted) {
+      setError('请先阅读并同意用户协议和隐私协议');
       return;
     }
     setSubmitting(true);
@@ -166,6 +171,21 @@ const Register: React.FC = () => {
            >
                {submitting ? '提交中...' : '下一步'}
            </button>
+       </div>
+
+       {/* Agreement */}
+       <div className="w-full px-8 mt-6 mb-8 flex items-center text-xs text-gray-500">
+           <button
+             onClick={() => setAgreementAccepted(!agreementAccepted)}
+             className={`w-4 h-4 rounded-full border flex-shrink-0 mr-2 flex items-center justify-center ${agreementAccepted ? 'border-green-600 bg-green-600' : 'border-gray-400 bg-white'}`}
+           >
+             {agreementAccepted && (
+               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+               </svg>
+             )}
+           </button>
+           <span>我已阅读并同意《云岸国际用户协议》和《云岸国际隐私协议》</span>
        </div>
     </div>
   );

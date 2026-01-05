@@ -11,10 +11,14 @@ interface Member {
   nickname: string;
   invite_code: string;
   is_main_account: boolean;
+  is_locked?: boolean;
+  deleted_at?: string | null;
   created_at: string;
   orderCount: number;
   couponsBalance: number;
   referralCount: number;
+  dailyCommission: number;
+  totalCommission: number;
 }
 
 interface MemberDetail {
@@ -69,6 +73,35 @@ const MemberManagement: React.FC = () => {
     }
   };
 
+  const handleToggleLock = async (userId: string, isLocked: boolean) => {
+    setLoading(true);
+    setError('');
+    try {
+      if (isLocked) await api.adminUnlockUser({ userId });
+      else await api.adminLockUser({ userId });
+      await fetchMembers();
+    } catch (err: any) {
+      setError(err.message || '操作失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    const ok = window.confirm('确认删除该会员？删除后将无法登录，且会被自动锁定。');
+    if (!ok) return;
+    setLoading(true);
+    setError('');
+    try {
+      await api.adminDeleteUser({ userId });
+      await fetchMembers();
+    } catch (err: any) {
+      setError(err.message || '删除失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const memberColumns: Column[] = [
     {
       key: 'id',
@@ -87,6 +120,16 @@ const MemberManagement: React.FC = () => {
           {row.is_main_account && (
             <span className="inline-block mt-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded">
               主账号
+            </span>
+          )}
+          {!!row.deleted_at && (
+            <span className="inline-block mt-1 ml-2 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded">
+              已删除
+            </span>
+          )}
+          {!!row.is_locked && !row.deleted_at && (
+            <span className="inline-block mt-1 ml-2 px-2 py-0.5 bg-slate-100 text-slate-700 text-xs rounded">
+              已锁定
             </span>
           )}
         </div>
@@ -115,6 +158,22 @@ const MemberManagement: React.FC = () => {
       )
     },
     {
+      key: 'dailyCommission',
+      label: '今日佣金',
+      width: '10%',
+      render: (value) => (
+        <span className="text-emerald-700 font-medium">¥{Number(value || 0).toFixed(2)}</span>
+      )
+    },
+    {
+      key: 'totalCommission',
+      label: '总佣金',
+      width: '10%',
+      render: (value) => (
+        <span className="text-emerald-700 font-medium">¥{Number(value || 0).toFixed(2)}</span>
+      )
+    },
+    {
       key: 'referralCount',
       label: '推荐人数',
       width: '10%',
@@ -123,23 +182,53 @@ const MemberManagement: React.FC = () => {
     {
       key: 'created_at',
       label: '注册时间',
-      width: '14%',
+      width: '12%',
       render: (value) => value.slice(0, 16).replace('T', ' ')
     },
     {
       key: 'actions',
       label: '操作',
-      width: '10%',
+      width: '14%',
       render: (_, row) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleViewMember(row.id);
-          }}
-          className="px-3 py-1 bg-blue-700 text-white text-xs rounded hover:bg-blue-800"
-        >
-          查看详情
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewMember(row.id);
+            }}
+            className="px-2 py-1 bg-blue-700 text-white text-xs rounded hover:bg-blue-800"
+          >
+            详情
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleLock(row.id, !!row.is_locked);
+            }}
+            disabled={row.is_main_account || !!row.deleted_at}
+            className={`px-2 py-1 text-white text-xs rounded ${
+              row.is_main_account || row.deleted_at
+                ? 'bg-gray-300 cursor-not-allowed'
+                : row.is_locked
+                  ? 'bg-emerald-600 hover:bg-emerald-700'
+                  : 'bg-orange-600 hover:bg-orange-700'
+            }`}
+          >
+            {row.is_locked ? '释放' : '锁定'}
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteUser(row.id);
+            }}
+            disabled={row.is_main_account || !!row.deleted_at}
+            className={`px-2 py-1 text-white text-xs rounded ${
+              row.is_main_account || row.deleted_at ? 'bg-gray-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
+            }`}
+          >
+            删除
+          </button>
+        </div>
       )
     }
   ];

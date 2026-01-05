@@ -7,12 +7,17 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const handleLogin = async () => {
     if (!phone || !password) {
       setError('请输入手机号和密码');
+      return;
+    }
+    if (!agreementAccepted) {
+      setError('请先阅读并同意用户协议和隐私协议');
       return;
     }
     setSubmitting(true);
@@ -89,12 +94,17 @@ const Login: React.FC = () => {
 
        {/* Footer Agreement */}
        <div className="mt-auto mb-8 flex items-center text-xs text-gray-500">
-           <div className="w-4 h-4 rounded-full border border-green-600 mr-2 bg-green-600 flex items-center justify-center">
-             <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-             </svg>
-           </div>
-           <span>《云岸国际用户协议》和《云岸国际隐私协议》</span>
+           <button
+             onClick={() => setAgreementAccepted(!agreementAccepted)}
+             className={`w-4 h-4 rounded-full border flex-shrink-0 mr-2 flex items-center justify-center ${agreementAccepted ? 'border-green-600 bg-green-600' : 'border-gray-400 bg-white'}`}
+           >
+             {agreementAccepted && (
+               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+               </svg>
+             )}
+           </button>
+           <span>我已阅读并同意《云岸国际用户协议》和《云岸国际隐私协议》</span>
        </div>
     </div>
   );

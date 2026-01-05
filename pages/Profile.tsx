@@ -107,7 +107,7 @@ const Profile: React.FC = () => {
   );
 
   const buyerActions = [
-    { label: '我的仓库', icon: Package, action: () => navigate('/warehouse?tab=warehouse') },
+    { label: '我的仓库', icon: Package, action: () => navigate('/warehouse?tab=buyer') },
     { label: '确认付款', icon: Wallet, action: () => navigate('/warehouse?tab=payment') },
     { label: '确认收货', icon: CircleDollarSign, action: () => navigate('/warehouse?tab=receipt') },
     { label: '已完成', icon: Gavel, action: () => navigate('/warehouse?tab=shipping') },
@@ -115,7 +115,7 @@ const Profile: React.FC = () => {
 
   // Updated seller actions to link to specific tabs in Warehouse
   const sellerActions = [
-    { label: '我的仓库', icon: Package, action: () => navigate('/warehouse?tab=warehouse') },
+    { label: '我的仓库', icon: Package, action: () => navigate('/warehouse?tab=seller') },
     { label: '确认付款', icon: Wallet, action: () => navigate('/warehouse?tab=payment') },
     { label: '确认收货', icon: CircleDollarSign, action: () => navigate('/warehouse?tab=receipt') },
     { label: '已完成', icon: Gavel, action: () => navigate('/warehouse?tab=shipping') },
@@ -150,11 +150,11 @@ const Profile: React.FC = () => {
          <div className="flex justify-between items-center text-center">
              <button onClick={() => navigate('/commission')} className="flex-1 border-r border-gray-100">
                  <div className="text-gray-500 text-sm mb-1 font-medium">权益券</div>
-                 <div className="text-red-500 font-bold text-lg">{stats.couponsBalance.toFixed(2)}</div>
+                 <div className="text-red-500 font-bold text-lg">{(stats.couponsBalance ?? 0).toFixed(2)}</div>
              </button>
              <button onClick={() => navigate('/transfer')} className="flex-1">
                  <div className="text-gray-500 text-sm mb-1 font-medium">今日抢单</div>
-                 <div className="text-red-500 font-bold text-lg">{stats.todayOrders.toFixed(0)}</div>
+                 <div className="text-red-500 font-bold text-lg">{(stats.todayOrders ?? 0).toFixed(0)}</div>
              </button>
          </div>
          {!user.isMainAccount && (
