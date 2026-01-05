@@ -20,6 +20,9 @@ const DataTable: React.FC<DataTableProps> = ({
   onRowClick,
   emptyText = '暂无数据'
 }) => {
+  // 确保 data 始终是数组
+  const safeData = data || [];
+
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -38,7 +41,7 @@ const DataTable: React.FC<DataTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {data.length === 0 ? (
+            {safeData.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length}
@@ -48,7 +51,7 @@ const DataTable: React.FC<DataTableProps> = ({
                 </td>
               </tr>
             ) : (
-              data.map((row, rowIndex) => (
+              safeData.map((row, rowIndex) => (
                 <tr
                   key={rowIndex}
                   onClick={() => onRowClick?.(row)}

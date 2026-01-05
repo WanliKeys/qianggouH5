@@ -46,9 +46,10 @@ const OrderManagement: React.FC = () => {
   const fetchOrders = async () => {
     try {
       const data = await api.adminFetchOrders();
-      setOrders(data.orders);
+      setOrders(data.orders || []); // 确保 orders 始终是数组
     } catch (err: any) {
       setError(err.message || '加载失败');
+      setOrders([]); // 失败时也设置为空数组
     }
   };
 
